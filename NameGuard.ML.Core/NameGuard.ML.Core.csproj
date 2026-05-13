@@ -2,17 +2,18 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
     <RootNamespace>NameGuard.ML.Core</RootNamespace>
     <AssemblyName>NameGuard.ML.Core</AssemblyName>
 
     <IsPackable>true</IsPackable>
     <PackageId>NameGuard.ML.Core</PackageId>
-    <Version>0.1.0</Version>
-    <Authors>NameGuard</Authors>
-    <Description>Detect whether a given name input is likely a real human name or fake/junk.</Description>
-    <PackageTags>name;validation;ml;classification</PackageTags>
+    <Title>NameGuard.ML.Core</Title>
+    <Description>Detect whether a name input is a real human name or fake/junk. Hybrid pipeline: heuristic fast-path plus an ML.NET FastTree classifier over character n-grams. Trained model is embedded — no runtime downloads.</Description>
+    <PackageTags>name;validation;ml;classification;ml.net;name-guard</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +23,10 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources/model.zip" Condition="Exists('Resources/model.zip')" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

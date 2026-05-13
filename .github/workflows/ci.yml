@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # MinVer needs full history + tags to compute version
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore NameGuard.ML.sln
+
+      - name: Build
+        run: dotnet build NameGuard.ML.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test NameGuard.ML.sln --configuration Release --no-build --logger "console;verbosity=normal" --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/TestResults/*.trx'
+          retention-days: 14
+
+      - name: Pack NameGuard.ML.Core
+        run: dotnet pack NameGuard.ML.Core/NameGuard.ML.Core.csproj --configuration Release --no-build --output ./nupkg
+
+      - name: Upload NuGet artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NameGuard.ML.Core-nupkg
+          path: ./nupkg/*.*nupkg
+          retention-days: 30
+
+  publish:
+    name: Publish to NuGet
+    needs: build-and-test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Pack
+        run: dotnet pack NameGuard.ML.Core/NameGuard.ML.Core.csproj --configuration Release --output ./nupkg
+
+      - name: Push package to nuget.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push ./nupkg/*.nupkg \
+            --source https://api.nuget.org/v3/index.json \
+            --api-key "$NUGET_API_KEY" \
+            --skip-duplicate
+
+      - name: Push symbol package to nuget.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push ./nupkg/*.snupkg \
+            --source https://api.nuget.org/v3/index.json \
+            --api-key "$NUGET_API_KEY" \
+            --skip-duplicate
