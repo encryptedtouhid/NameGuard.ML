@@ -6,6 +6,8 @@ Versions are derived automatically from git tags via [MinVer](https://github.com
 
 ## [Unreleased]
 
+## [0.1.3] — 2026-05-13
+
 ### Fixed
 - Mixed-junk inputs like `"Khaled asd asd"` or `"zephy xyz"` no longer score REAL. Previously the max-score aggregation across tokens let one strong token rescue obvious junk siblings. `NameGuard.Check` now runs a strict per-token reject (keyboard / alphabet rolls, long repeating runs) before falling through to ML.
 - Short keyboard-row fragments (`asd`, `sdf`, `dfg`, `qwe`, …) and alphabet-adjacent rolls (`abc`, `xyz`, …) are now caught by the heuristic. Keyboard-roll min length lowered from 4 to 3; the alphabet itself was added as a roll row.
@@ -41,6 +43,7 @@ Initial release.
 - 5-fold CV AUC `0.9996`, Accuracy `0.9919`, F1 `0.9919`.
 - External verification: 197/197 representative names from every UN member state + observers classified as REAL at score ≥ 0.98.
 
-[Unreleased]: https://github.com/encryptedtouhid/NameGuard.ML/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/encryptedtouhid/NameGuard.ML/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/encryptedtouhid/NameGuard.ML/compare/v0.1.1...v0.1.3
 [0.1.1]: https://github.com/encryptedtouhid/NameGuard.ML/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/encryptedtouhid/NameGuard.ML/releases/tag/v0.1.0
