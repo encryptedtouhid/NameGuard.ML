@@ -1,0 +1,37 @@
+name: Publish to NuGet
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish NameGuard.ML.Core to nuget.org
+    runs-on: ubuntu-latest
+    environment: nuget   # gated: requires manual approval from the owner
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # MinVer needs full history + tags
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Pack
+        run: dotnet pack NameGuard.ML.Core/NameGuard.ML.Core.csproj --configuration Release --output ./nupkg
+
+      - name: Push package to nuget.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push ./nupkg/*.nupkg \
+            --source https://api.nuget.org/v3/index.json \
+            --api-key "$NUGET_API_KEY" \
+            --skip-duplicate

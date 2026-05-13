@@ -2,6 +2,15 @@
 
 Issues and pull requests welcome. This doc covers how to build, test, retrain, and cut releases.
 
+## Governance
+
+NameGuard.ML is maintained solo by [@encryptedtouhid](https://github.com/encryptedtouhid).
+
+- All changes to `main` go through a pull request reviewed and approved by the owner. Direct pushes to `main` are blocked.
+- Release tags (`v*`) can only be created by the owner. CI does not publish on any other ref.
+- Publishing to nuget.org runs in a protected deployment environment; the owner must approve each release before the package is pushed.
+- Security issues must be reported privately via [GitHub Security Advisories](https://github.com/encryptedtouhid/NameGuard.ML/security/advisories/new), not as public issues.
+
 ## Build & test
 
 Requires .NET 8 SDK.
