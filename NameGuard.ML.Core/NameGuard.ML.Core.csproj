@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>NameGuard.ML.Core</RootNamespace>
+    <AssemblyName>NameGuard.ML.Core</AssemblyName>
+
+    <IsPackable>true</IsPackable>
+    <PackageId>NameGuard.ML.Core</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>NameGuard</Authors>
+    <Description>Detect whether a given name input is likely a real human name or fake/junk.</Description>
+    <PackageTags>name;validation;ml;classification</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ML" Version="5.0.0" />
+    <PackageReference Include="Microsoft.ML.FastTree" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources/model.zip" Condition="Exists('Resources/model.zip')" />
+  </ItemGroup>
+
+</Project>

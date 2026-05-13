@@ -1,0 +1,78 @@
+# Build output
+bin/
+obj/
+out/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+build/
+publish/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+**/packages/*
+!**/packages/build/
+
+# .NET Core / dotnet CLI
+project.lock.json
+project.fragment.lock.json
+artifacts/
+.dotnet/
+
+# Test results
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+coverage*.info
+TestResults/
+.coverage/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userprefs
+*.sln.docstates
+*.userosscache
+*.swp
+*.swo
+
+# JetBrains
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Local config
+local.settings.json
+appsettings.Local.json
+*.local.json
+
+# Secrets
+secrets.json
+.env
+.env.*
+!.env.example
+
+# Trained model artifacts (regenerate via NameGuard.Trainer)
+# Keep the bundled model.zip checked in since it ships with the NuGet package.
+# Comment the next line out if you prefer to gitignore it instead.
+# NameGuard.Core/Resources/model.zip
