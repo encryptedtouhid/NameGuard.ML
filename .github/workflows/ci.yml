@@ -59,6 +59,38 @@ jobs:
           path: ./nupkg/*.*nupkg
           retention-days: 30
 
+  trainer-verify:
+    name: Verify trainer reproduces model
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore NameGuard.ML.Trainer/NameGuard.ML.Trainer.csproj
+
+      - name: Build trainer
+        run: dotnet build NameGuard.ML.Trainer/NameGuard.ML.Trainer.csproj --configuration Release --no-restore
+
+      - name: Run trainer with AUC gate (>= 0.99)
+        run: dotnet run --project NameGuard.ML.Trainer/NameGuard.ML.Trainer.csproj --configuration Release --no-build -- --min-auc 0.99
+
   publish:
     name: Publish to NuGet
     needs: build-and-test

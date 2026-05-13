@@ -1,18 +1,22 @@
-using System.Reflection;
+using System.Collections.Concurrent;
 using Microsoft.ML;
 using NameGuard.ML.Core.Heuristics;
 using NameGuard.ML.Core.Models;
 
 namespace NameGuard.ML.Core;
 
-public sealed class NameGuard : INameGuard
+public sealed class NameGuard : INameGuard, IDisposable
 {
     public const float DefaultThreshold = 0.5f;
 
     private const string EmbeddedModelResource = "NameGuard.ML.Core.Resources.model.zip";
+    private static readonly char[] TokenSeparators = { ' ', '\t', '\n', '\r' };
 
-    private readonly PredictionEngine<NameInput, RawPrediction> _engine;
+    private readonly MLContext _mlContext;
+    private readonly ITransformer _model;
+    private readonly ConcurrentBag<PredictionEngine<NameInput, RawPrediction>> _pool = new();
     private readonly float _threshold;
+    private int _disposed;
 
     public NameGuard(float threshold = DefaultThreshold)
         : this(LoadEmbeddedModel(), threshold)
@@ -21,17 +25,19 @@ public sealed class NameGuard : INameGuard
 
     public NameGuard(Stream modelStream, float threshold = DefaultThreshold)
     {
-        if (modelStream is null) throw new ArgumentNullException(nameof(modelStream));
+        ArgumentNullException.ThrowIfNull(modelStream);
+        ValidateThreshold(threshold);
 
-        var mlContext = new MLContext(seed: 1);
-        var model = mlContext.Model.Load(modelStream, out _);
-        _engine = mlContext.Model.CreatePredictionEngine<NameInput, RawPrediction>(model);
+        _mlContext = new MLContext(seed: 1);
+        _model = _mlContext.Model.Load(modelStream, out _);
         _threshold = threshold;
     }
 
     public NamePrediction Check(string name)
     {
-        var input = name ?? string.Empty;
+        ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) == 1, this);
+
+        var input = (name ?? string.Empty).Trim();
 
         if (JunkDetector.TryReject(input, out var reason))
         {
@@ -43,14 +49,77 @@ public sealed class NameGuard : INameGuard
             };
         }
 
-        var raw = _engine.Predict(new NameInput { Name = input });
-        var isReal = raw.Probability >= _threshold;
+        var score = Predict(input);
+
+        // Multi-token aggregation: rare given/surname components can drag the
+        // whole-string score down. Score each token too and take the max.
+        var separatorIdx = input.AsSpan().IndexOfAny(TokenSeparators);
+        if (separatorIdx >= 0)
+        {
+            foreach (var token in input.Split(TokenSeparators, StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (token.Length < 2) continue;
+                var tokenScore = Predict(token);
+                if (tokenScore > score) score = tokenScore;
+            }
+        }
+
+        var isReal = score >= _threshold;
         return new NamePrediction
         {
             IsReal = isReal,
-            Score = raw.Probability,
+            Score = score,
             Reason = isReal ? "ML model" : "ML model: low score",
         };
+    }
+
+    public void Dispose()
+    {
+        if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
+        while (_pool.TryTake(out var engine))
+        {
+            engine.Dispose();
+        }
+    }
+
+    private float Predict(string name)
+    {
+        var engine = Rent();
+        try
+        {
+            return engine.Predict(new NameInput { Name = name }).Probability;
+        }
+        finally
+        {
+            Return(engine);
+        }
+    }
+
+    private PredictionEngine<NameInput, RawPrediction> Rent()
+    {
+        if (_pool.TryTake(out var engine)) return engine;
+        return _mlContext.Model.CreatePredictionEngine<NameInput, RawPrediction>(_model);
+    }
+
+    private void Return(PredictionEngine<NameInput, RawPrediction> engine)
+    {
+        if (Volatile.Read(ref _disposed) == 1)
+        {
+            engine.Dispose();
+            return;
+        }
+        _pool.Add(engine);
+    }
+
+    private static void ValidateThreshold(float threshold)
+    {
+        if (float.IsNaN(threshold) || threshold < 0f || threshold > 1f)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(threshold),
+                threshold,
+                "Threshold must be a number in [0, 1].");
+        }
     }
 
     private static Stream LoadEmbeddedModel()

@@ -48,12 +48,13 @@ internal static class TrainingPipeline
         Console.WriteLine($"  CV F1       : {avgF1:F4}");
     }
 
-    public static void EvaluateHoldout(MLContext ml, ITransformer model, IDataView test)
+    public static (double Auc, double Accuracy, double F1) EvaluateHoldout(MLContext ml, ITransformer model, IDataView test)
     {
         var preds = model.Transform(test);
         var metrics = ml.BinaryClassification.Evaluate(preds, labelColumnName: "Label");
         Console.WriteLine($"  Holdout AUC      : {metrics.AreaUnderRocCurve:F4}");
         Console.WriteLine($"  Holdout Accuracy : {metrics.Accuracy:F4}");
         Console.WriteLine($"  Holdout F1       : {metrics.F1Score:F4}");
+        return (metrics.AreaUnderRocCurve, metrics.Accuracy, metrics.F1Score);
     }
 }

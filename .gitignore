@@ -15,8 +15,12 @@ publish/
 *.nupkg
 *.snupkg
 .nuget/
+nupkg/
 **/packages/*
 !**/packages/build/
+
+# BenchmarkDotNet
+BenchmarkDotNet.Artifacts/
 
 # .NET Core / dotnet CLI
 project.lock.json

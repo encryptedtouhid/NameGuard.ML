@@ -54,6 +54,12 @@ public static class JunkDetector
             return true;
         }
 
+        if (HasNonLatinLetter(trimmed))
+        {
+            reason = "Non-Latin script";
+            return true;
+        }
+
         var normalized = StripDiacriticsLower(trimmed);
 
         if (AllSameLetter(normalized))
@@ -84,12 +90,28 @@ public static class JunkDetector
         return false;
     }
 
+    private static bool HasNonLatinLetter(string s)
+    {
+        foreach (var ch in s)
+        {
+            if (!char.IsLetter(ch)) continue;
+            if (ch <= 'ɏ') continue;                       // Basic Latin + Latin-1 + Latin Extended-A/B
+            if (ch >= 'Ḁ' && ch <= 'ỿ') continue;     // Latin Extended Additional
+            return true;
+        }
+        return false;
+    }
+
     private static bool AllSameLetter(string s)
     {
-        var letters = s.Where(char.IsLetter).ToArray();
-        if (letters.Length == 0) return false;
-        var first = letters[0];
-        return letters.All(c => c == first);
+        var first = '\0';
+        foreach (var ch in s)
+        {
+            if (!char.IsLetter(ch)) continue;
+            if (first == '\0') { first = ch; continue; }
+            if (ch != first) return false;
+        }
+        return first != '\0';
     }
 
     private static bool HasNoVowel(string s)
@@ -121,24 +143,27 @@ public static class JunkDetector
         return false;
     }
 
-    private static bool IsKeyboardRoll(string s)
+    private static bool IsKeyboardRoll(ReadOnlySpan<char> s)
     {
-        var letters = new string(s.Where(char.IsLetter).ToArray());
-        if (letters.Length < 4) return false;
+        Span<char> letters = stackalloc char[s.Length];
+        var n = 0;
+        foreach (var ch in s)
+        {
+            if (char.IsLetter(ch)) letters[n++] = ch;
+        }
+        if (n < 4) return false;
+        var forward = letters[..n];
+
+        Span<char> reversed = stackalloc char[n];
+        for (var i = 0; i < n; i++) reversed[i] = forward[n - 1 - i];
 
         foreach (var row in KeyboardRows)
         {
-            if (row.Contains(letters)) return true;
-            if (row.Contains(Reverse(letters))) return true;
+            var rowSpan = row.AsSpan();
+            if (rowSpan.IndexOf(forward) >= 0) return true;
+            if (rowSpan.IndexOf(reversed) >= 0) return true;
         }
         return false;
-    }
-
-    private static string Reverse(string s)
-    {
-        var arr = s.ToCharArray();
-        Array.Reverse(arr);
-        return new string(arr);
     }
 
     private static string StripDiacriticsLower(string text)

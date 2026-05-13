@@ -6,6 +6,8 @@ using NameGuard.ML.Trainer;
 const int CountPerCountry = 100;
 const int Seed = 42;
 
+var minAuc = ParseMinAuc(args);
+
 var trainerDir = AppContext.BaseDirectory;
 var projectDir = LocateProjectDir(trainerDir);
 var solutionDir = Directory.GetParent(projectDir)?.FullName
@@ -41,7 +43,7 @@ var model = TrainingPipeline.Train(ml, split.TrainSet, out var pipeline);
 
 Console.WriteLine();
 Console.WriteLine("Holdout evaluation:");
-TrainingPipeline.EvaluateHoldout(ml, model, split.TestSet);
+var (holdoutAuc, _, _) = TrainingPipeline.EvaluateHoldout(ml, model, split.TestSet);
 
 Console.WriteLine();
 Console.WriteLine("5-fold cross-validation:");
@@ -62,7 +64,31 @@ foreach (var sample in new[] { "John Smith", "Mary Johnson", "Khaled Hossain", "
     Console.WriteLine($"  {sample,-25} -> prob={p.Probability:F3} pred={(p.PredictedLabel ? "REAL" : "FAKE")}");
 }
 
+if (minAuc is double threshold)
+{
+    Console.WriteLine();
+    if (holdoutAuc < threshold)
+    {
+        Console.Error.WriteLine($"FAIL: holdout AUC {holdoutAuc:F4} < required {threshold:F4}");
+        Environment.Exit(1);
+    }
+    Console.WriteLine($"OK: holdout AUC {holdoutAuc:F4} >= required {threshold:F4}");
+}
+
 return;
+
+static double? ParseMinAuc(string[] args)
+{
+    for (var i = 0; i < args.Length - 1; i++)
+    {
+        if (args[i] == "--min-auc" &&
+            double.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var v))
+        {
+            return v;
+        }
+    }
+    return null;
+}
 
 static void Shuffle<T>(List<T> list, Random rng)
 {

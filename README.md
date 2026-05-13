@@ -1,6 +1,6 @@
 # NameGuard.ML.Core
 
-Detect whether a name input is a real human name or fake / junk. Fast (microseconds per call), self-contained (embedded model), runs entirely offline. Targets `net8.0`.
+Detect whether a name input is a real human name or fake / junk. Fast (microseconds per call), self-contained (embedded model), runs entirely offline. Targets `net8.0` and `net9.0`.
 
 [![NuGet](https://img.shields.io/nuget/v/NameGuard.ML.Core.svg?label=NuGet&logo=nuget)](https://www.nuget.org/packages/NameGuard.ML.Core/)
 [![Downloads](https://img.shields.io/nuget/dt/NameGuard.ML.Core.svg?label=Downloads&logo=nuget)](https://www.nuget.org/packages/NameGuard.ML.Core/)
@@ -98,11 +98,12 @@ public interface INameGuard
     NamePrediction Check(string name);
 }
 
-public sealed class NameGuard : INameGuard
+public sealed class NameGuard : INameGuard, IDisposable
 {
-    public NameGuard(float threshold = 0.5f);
+    public NameGuard(float threshold = 0.5f);                   // threshold must be in [0, 1]
     public NameGuard(Stream modelStream, float threshold = 0.5f);
-    public NamePrediction Check(string name);
+    public NamePrediction Check(string name);                   // thread-safe
+    public void Dispose();
 }
 
 public sealed class NamePrediction
@@ -115,16 +116,14 @@ public sealed class NamePrediction
 
 ## Limitations
 
-- **Single-token names** (`Akihito`, `Pyotr`) score lower — pass full names where possible.
+- **Single-token names** (`Akihito`, `Pyotr`) score lower — pass full names where possible. Multi-token inputs are scored both as a whole and per token, so rare components don't drag down strong ones.
 - **Dictionary-word combos** (`Lorem Ipsum`, `Test Test`) pass — layer a stop-word check above if needed.
-- **Latin-script only** — diacritics are stripped; romanize Cyrillic / CJK / Arabic input.
-- **`Check()` is not thread-safe** (ML.NET `PredictionEngine` limitation) — pool one instance per worker, or guard with a lock.
+- **Latin-script only** — Cyrillic / CJK / Arabic / Greek / Hebrew etc. are rejected with reason `"Non-Latin script"`. Romanize before calling `Check()`.
+
+`Check()` is thread-safe — a single `NameGuard` instance can be shared across requests / threads. It pools `PredictionEngine` instances internally and grows the pool on contention. Call `Dispose()` on shutdown.
 
 ## Links
 
 - **Source & issues** — https://github.com/encryptedtouhid/NameGuard.ML
 - **Changelog** — [CHANGELOG.md](https://github.com/encryptedtouhid/NameGuard.ML/blob/main/CHANGELOG.md)
-- **Contributing & releasing** — [CONTRIBUTING.md](https://github.com/encryptedtouhid/NameGuard.ML/blob/main/CONTRIBUTING.md)
 - **License** — [MIT](LICENSE)
-
-If you find this useful, ⭐ [the repo on GitHub](https://github.com/encryptedtouhid/NameGuard.ML).

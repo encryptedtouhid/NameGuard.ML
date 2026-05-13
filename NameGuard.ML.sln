@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NameGuard.ML.Example", "Nam
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NameGuard.ML.Test", "NameGuard.ML.Test\NameGuard.ML.Test.csproj", "{BD204D14-0DF2-4DA3-880E-5069E4D99794}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NameGuard.ML.Benchmarks", "NameGuard.ML.Benchmarks\NameGuard.ML.Benchmarks.csproj", "{4FFD8BD3-A8BB-4C06-8F6B-54EC8852DCF3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,18 @@ Global
 		{BD204D14-0DF2-4DA3-880E-5069E4D99794}.Release|x64.Build.0 = Release|Any CPU
 		{BD204D14-0DF2-4DA3-880E-5069E4D99794}.Release|x86.ActiveCfg = Release|Any CPU
 		{BD204D14-0DF2-4DA3-880E-5069E4D99794}.Release|x86.Build.0 = Release|Any CPU
+		{4FFD8BD3-A8BB-4C06-8F6B-54EC8852DCF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FFD8BD3-A8BB-4C06-8F6B-54EC8852DCF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FFD8BD3-A8BB-4C06-8F6B-54EC8852DCF3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4FFD8BD3-A8BB-4C06-8F6B-54EC8852DCF3}.Debug|x64.Build.0 = Debug|Any CPU
+		{4FFD8BD3-A8BB-4C06-8F6B-54EC8852DCF3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4FFD8BD3-A8BB-4C06-8F6B-54EC8852DCF3}.Debug|x86.Build.0 = Debug|Any CPU
+		{4FFD8BD3-A8BB-4C06-8F6B-54EC8852DCF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FFD8BD3-A8BB-4C06-8F6B-54EC8852DCF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4FFD8BD3-A8BB-4C06-8F6B-54EC8852DCF3}.Release|x64.ActiveCfg = Release|Any CPU
+		{4FFD8BD3-A8BB-4C06-8F6B-54EC8852DCF3}.Release|x64.Build.0 = Release|Any CPU
+		{4FFD8BD3-A8BB-4C06-8F6B-54EC8852DCF3}.Release|x86.ActiveCfg = Release|Any CPU
+		{4FFD8BD3-A8BB-4C06-8F6B-54EC8852DCF3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
