@@ -49,14 +49,34 @@ public sealed class NameGuard : INameGuard, IDisposable
             };
         }
 
+        // Per-token reject: max-score aggregation below lets one strong token
+        // rescue obvious junk siblings (e.g. "Khaled asd"). Catch that first.
+        var separatorIdx = input.AsSpan().IndexOfAny(TokenSeparators);
+        string[]? tokens = null;
+        if (separatorIdx >= 0)
+        {
+            tokens = input.Split(TokenSeparators, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var token in tokens)
+            {
+                if (JunkDetector.TryRejectToken(token, out var tokenReason))
+                {
+                    return new NamePrediction
+                    {
+                        IsReal = false,
+                        Score = 0f,
+                        Reason = tokenReason,
+                    };
+                }
+            }
+        }
+
         var score = Predict(input);
 
         // Multi-token aggregation: rare given/surname components can drag the
         // whole-string score down. Score each token too and take the max.
-        var separatorIdx = input.AsSpan().IndexOfAny(TokenSeparators);
-        if (separatorIdx >= 0)
+        if (tokens is not null)
         {
-            foreach (var token in input.Split(TokenSeparators, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var token in tokens)
             {
                 if (token.Length < 2) continue;
                 var tokenScore = Predict(token);

@@ -16,7 +16,10 @@ public static class JunkDetector
         "1234567890",
         "azertyuiop",
         "qwertzuiop",
+        "abcdefghijklmnopqrstuvwxyz",
     };
+
+    private const int MinRollLength = 3;
 
     public static bool TryReject(string input, out string reason)
     {
@@ -73,6 +76,39 @@ public static class JunkDetector
             reason = "No vowels";
             return true;
         }
+
+        if (HasRunOfSameChar(normalized, run: 4))
+        {
+            reason = "Long repeating run";
+            return true;
+        }
+
+        if (IsKeyboardRoll(normalized))
+        {
+            reason = "Keyboard roll detected";
+            return true;
+        }
+
+        reason = string.Empty;
+        return false;
+    }
+
+    /// <summary>
+    /// Strict per-token reject: catches only patterns that are virtually never
+    /// real name fragments (keyboard / alphabet rolls, long repeating runs).
+    /// Skips the looser whole-string checks (no-vowel, length, digits) so
+    /// short particles like "Mr"/"Jr" and initials aren't false-rejected.
+    /// </summary>
+    public static bool TryRejectToken(string token, out string reason)
+    {
+        var trimmed = (token ?? string.Empty).Trim();
+        if (trimmed.Length < MinRollLength)
+        {
+            reason = string.Empty;
+            return false;
+        }
+
+        var normalized = StripDiacriticsLower(trimmed);
 
         if (HasRunOfSameChar(normalized, run: 4))
         {
@@ -151,7 +187,7 @@ public static class JunkDetector
         {
             if (char.IsLetter(ch)) letters[n++] = ch;
         }
-        if (n < 4) return false;
+        if (n < MinRollLength) return false;
         var forward = letters[..n];
 
         Span<char> reversed = stackalloc char[n];

@@ -31,6 +31,11 @@ public class NameGuardTests
     [InlineData("zzxxccvv")]
     [InlineData("12345")]
     [InlineData("")]
+    [InlineData("Asd asd asd")]
+    [InlineData("Jogn asd asd")]
+    [InlineData("Khaled asd asd")]
+    [InlineData("zephy asd")]
+    [InlineData("zephy xyz")]
     public void PredictsFakeForJunk(string name)
     {
         var p = Guard.Check(name);

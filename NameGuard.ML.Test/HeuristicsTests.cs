@@ -67,11 +67,36 @@ public class HeuristicsTests
     [InlineData("qwerty")]
     [InlineData("asdfgh")]
     [InlineData("ytrewq")]
+    [InlineData("asd")]
+    [InlineData("xyz")]
+    [InlineData("abc")]
     public void RejectsKeyboardRolls(string input)
     {
         var rejected = JunkDetector.TryReject(input, out var reason);
         Assert.True(rejected);
         Assert.Equal("Keyboard roll detected", reason);
+    }
+
+    [Theory]
+    [InlineData("asd")]
+    [InlineData("xyz")]
+    [InlineData("qwe")]
+    public void RejectsTokenForKeyboardRoll(string token)
+    {
+        var rejected = JunkDetector.TryRejectToken(token, out var reason);
+        Assert.True(rejected);
+        Assert.Equal("Keyboard roll detected", reason);
+    }
+
+    [Theory]
+    [InlineData("Mr")]
+    [InlineData("Jr")]
+    [InlineData("Wei")]
+    [InlineData("Raj")]
+    [InlineData("Khaled")]
+    public void TokenRejectAllowsShortAndRealParticles(string token)
+    {
+        Assert.False(JunkDetector.TryRejectToken(token, out _));
     }
 
     [Theory]
